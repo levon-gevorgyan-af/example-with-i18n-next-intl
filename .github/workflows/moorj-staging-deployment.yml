@@ -44,7 +44,7 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          echo "${{ secrets.kubeconfig }}" | base64 --decode > kubeconfig
+           echo "$KUBE_CONFIG" | base64 --decode > kubeconfig
         env:
           KUBE_CONFIG: ${{ secrets.kubeconfig }}
 

@@ -20,4 +20,4 @@ jobs:
     secrets:
       registry_username: ${{ secrets.STAGING_REGISTRY_USERNAME }}
       registry_password: ${{ secrets.STAGING_REGISTRY_PASSWORD }}
-      kubeconfig: ${{ secrets.KUBE_CONFIG }}
+      kubeconfig: ${{ secrets.STAGING_KUBE_CONFIG }}
