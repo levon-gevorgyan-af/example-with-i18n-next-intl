@@ -1,0 +1,73 @@
+name: moorj-staging-deployment
+
+on:
+  workflow_call:
+    inputs:
+      service_role:
+        required: true
+        type: string
+      image:
+        required: true
+        type: string
+      dockerfile_path:
+        required: true
+        type: string
+      chart_path:
+        required: true
+        type: string
+      namespace:
+        required: true
+        type: string
+      hostname:
+        required: true
+        type: string
+      registry_username_secret:
+        required: true
+        type: string
+      registry_password_secret:
+        required: true
+        type: string
+      image_pull_secret:
+        required: true
+        type: string
+      configuration_prefix:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.moorj.dev:13443
+          username: ${{ secrets[inputs.registry_username_secret] }}
+          password: ${{ secrets[inputs.registry_password_secret] }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ inputs.dockerfile_path }}
+          push: true
+          tags: |
+            ${{ inputs.image }}:${{ github.sha }}
+            ${{ inputs.image }}:latest
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install ${{ inputs.service_role }} ${{ inputs.chart_path }} \
+            --namespace ${{ inputs.namespace }} \
+            --set image=${{ inputs.image }}:${{ github.sha }} \
+            --set hostname=${{ inputs.hostname }} \
+            --set imagePullSecrets[0].name=${{ inputs.image_pull_secret }} \
+            --set global.configurationPrefix=${{ inputs.configuration_prefix }}

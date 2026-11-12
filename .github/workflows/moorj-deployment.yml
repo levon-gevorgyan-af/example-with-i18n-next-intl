@@ -1,0 +1,21 @@
+name: moorj-deployment
+
+on:
+  push:
+    branches:
+      - moorj-main
+
+jobs:
+  reusable-workflow:
+    uses: ./.github/workflows/moorj-staging-deployment.yml
+    with:
+      service_role: frontend
+      image: registry.moorj.dev:13443/levon-gevorgyan-af/example-with-i18n-next-intl-staging
+      dockerfile_path: .moorj/deploy/docker/frontend.Dockerfile
+      chart_path: .moorj/deploy/helm
+      namespace: moorj-levon-gevorgyan-af-example-with-i18n-next-intl-staging
+      hostname: moorj-levon-gevorgyan-af-example-with-i18n-next-intl-staging.moorj.dev
+      registry_username_secret: STAGING_REGISTRY_USERNAME
+      registry_password_secret: STAGING_REGISTRY_PASSWORD
+      image_pull_secret: registry-pull-secret
+      configuration_prefix: STAGING_
