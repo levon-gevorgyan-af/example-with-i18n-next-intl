@@ -37,7 +37,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,7 +86,8 @@ jobs:
           export KUBECONFIG=$(pwd)/kubeconfig
           helm upgrade --install ${{ inputs.service_role }} ${{ inputs.chart_path }} \
             --namespace ${{ inputs.namespace }} \
-            --set image=${{ inputs.image }}:${{ github.sha }} \
+            --set image.repository=${{ inputs.image }} \
+            --set image.tag=${{ github.sha }} \
             --set hostname=${{ inputs.hostname }} \
             --set imagePullSecrets[0].name=${{ inputs.image_pull_secret }} \
             --set global.configurationPrefix=${{ inputs.configuration_prefix }}

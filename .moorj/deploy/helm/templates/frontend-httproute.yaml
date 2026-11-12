@@ -2,14 +2,14 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: frontend
-  namespace: moorj-levon-gevorgyan-af-example-with-i18n-next-intl-staging
+  namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
     - name: shared-gateway
       namespace: envoy-gateway-system
       sectionName: wildcard-moorj-https
   hostnames:
-    - moorj-levon-gevorgyan-af-example-with-i18n-next-intl-staging.moorj.dev
+    - {{ .Values.hostname }}
   rules:
     - backendRefs:
         - name: frontend
