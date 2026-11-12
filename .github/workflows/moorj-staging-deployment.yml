@@ -55,9 +55,9 @@ jobs:
             --docker-username=${{ secrets.registry_username }} \
             --docker-password=${{ secrets.registry_password }} \
             --namespace ${{ inputs.namespace }} \
-            --dry-run=client -o yaml | kubectl apply -f -
+             --dry-run=client -o yaml | kubectl apply --validate=false -f -
         env:
-          KUBECONFIG: $(pwd)/kubeconfig
+          KUBECONFIG: kubeconfig
 
       - name: Log in to registry
         uses: docker/login-action@v3
