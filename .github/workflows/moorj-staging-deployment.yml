@@ -21,18 +21,19 @@ on:
       hostname:
         required: true
         type: string
-      registry_username_secret:
-        required: true
-        type: string
-      registry_password_secret:
-        required: true
-        type: string
       image_pull_secret:
         required: true
         type: string
       configuration_prefix:
         required: true
         type: string
+    secrets:
+      registry_username:
+        required: true
+      registry_password:
+        required: true
+      kubeconfig:
+        required: true
 
 jobs:
   deploy:
@@ -41,12 +42,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Kubeconfig
+        run: |
+          echo "${{ secrets.kubeconfig }}" | base64 --decode > kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.kubeconfig }}
+
+      - name: Create registry-pull-secret
+        run: |
+          kubectl create secret docker-registry ${{ inputs.image_pull_secret }} \
+            --docker-server=registry.moorj.dev:13443 \
+            --docker-username=${{ secrets.registry_username }} \
+            --docker-password=${{ secrets.registry_password }} \
+            --namespace ${{ inputs.namespace }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+        env:
+          KUBECONFIG: $(pwd)/kubeconfig
+
       - name: Log in to registry
         uses: docker/login-action@v3
         with:
           registry: registry.moorj.dev:13443
-          username: ${{ secrets[inputs.registry_username_secret] }}
-          password: ${{ secrets[inputs.registry_password_secret] }}
+          username: ${{ secrets.registry_username }}
+          password: ${{ secrets.registry_password }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -65,6 +83,7 @@ jobs:
 
       - name: Deploy with Helm
         run: |
+          export KUBECONFIG=$(pwd)/kubeconfig
           helm upgrade --install ${{ inputs.service_role }} ${{ inputs.chart_path }} \
             --namespace ${{ inputs.namespace }} \
             --set image=${{ inputs.image }}:${{ github.sha }} \
